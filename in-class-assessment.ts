@@ -124,7 +124,16 @@ async function connectToDatabase(): Promise<Collection<Movie>> {
 // ============================================================================
 
 // YOUR CODE HERE
-
+app.get('/api/movies', async (req: Request, res: Response) => {
+    try {
+        const collection = await connectToDatabase();
+        const movies = await collection.find({}).toArray();
+        res.status(200).json(movies);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Failed to fetch movies' });
+    }
+});
 
 // ============================================================================
 // TODO #6: GET /api/movies/:id - Get Movie by ID (1 mark)
