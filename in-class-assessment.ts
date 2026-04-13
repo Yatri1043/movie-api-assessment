@@ -95,7 +95,25 @@ app.use(express.json());
 // ============================================================================
 
 // YOUR CODE HERE
+async function connectToDatabase(): Promise<Collection<Movie>> {
+    const dbConnString = process.env.DB_CONN_STRING;
+    const dbName = process.env.DB_NAME;
+    const collectionName = process.env.COLLECTION_NAME;
 
+    if (!dbConnString || !dbName || !collectionName) {
+        throw new Error('Missing required environment variables: DB_CONN_STRING, DB_NAME, COLLECTION_NAME');
+    }
+
+    const client = new MongoClient(dbConnString);
+    await client.connect();
+    
+    const db: Db = client.db(dbName);
+    const collection: Collection<Movie> = db.collection(collectionName);
+    
+    console.log(` Connected to database: ${dbName}, collection: ${collectionName}`);
+    
+    return collection;
+}
 
 // ============================================================================
 // TODO #5: GET /api/movies - Get All Movies (1 mark)
