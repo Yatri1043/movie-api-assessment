@@ -60,7 +60,13 @@ import dotenv from 'dotenv';
 // ============================================================================
 
 // YOUR CODE HERE
-
+interface Movie {
+    _id?: ObjectId;
+    title: string;
+    director: string;
+    year: number;
+    rating: number;
+}
 
 // ============================================================================
 // TODO #3: Initialize Express App and Environment Variables (1 mark)
