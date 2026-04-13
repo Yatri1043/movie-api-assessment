@@ -45,7 +45,9 @@
 // ============================================================================
 
 // YOUR CODE HERE
-
+import express, { Request, Response } from 'express';
+import { MongoClient, Db, Collection, ObjectId } from 'mongodb';
+import dotenv from 'dotenv';
 
 // ============================================================================
 // TODO #2: Create Movie Interface (1 mark)
