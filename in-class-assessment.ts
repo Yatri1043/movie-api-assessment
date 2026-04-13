@@ -44,7 +44,6 @@
 // MongoClient, Db, Collection, ObjectId), and dotenv
 // ============================================================================
 
-// YOUR CODE HERE
 import express, { Request, Response } from 'express';
 import { MongoClient, Db, Collection, ObjectId } from 'mongodb';
 import dotenv from 'dotenv';
@@ -59,7 +58,6 @@ import dotenv from 'dotenv';
 // - rating (number)
 // ============================================================================
 
-// YOUR CODE HERE
 interface Movie {
     _id?: ObjectId;
     title: string;
@@ -76,13 +74,16 @@ interface Movie {
 // - Add express.json() middleware to parse JSON bodies
 // ============================================================================
 
-// YOUR CODE HERE
 dotenv.config();
 
 const app = express();
 const PORT = 5000;
 
 app.use(express.json());
+
+// Global variables for connection reuse
+let moviesCollection: Collection<Movie>;
+let mongoClient: MongoClient;
 
 // ============================================================================
 // TODO #4: Create Database Connection Function (1 mark)
@@ -94,25 +95,31 @@ app.use(express.json());
 // - Console.logs a success message with database and collection names
 // ============================================================================
 
-// YOUR CODE HERE
 async function connectToDatabase(): Promise<Collection<Movie>> {
+    // Return existing collection if already connected
+    if (moviesCollection) {
+        return moviesCollection;
+    }
+    
     const dbConnString = process.env.DB_CONN_STRING;
     const dbName = process.env.DB_NAME;
     const collectionName = process.env.COLLECTION_NAME;
 
     if (!dbConnString || !dbName || !collectionName) {
-        throw new Error('Missing required environment variables: DB_CONN_STRING, DB_NAME, COLLECTION_NAME');
+        throw new Error('Missing required environment variables');
     }
 
-    const client = new MongoClient(dbConnString);
-    await client.connect();
+    if (!mongoClient) {
+        mongoClient = new MongoClient(dbConnString);
+        await mongoClient.connect();
+    }
     
-    const db: Db = client.db(dbName);
-    const collection: Collection<Movie> = db.collection(collectionName);
+    const db: Db = mongoClient.db(dbName);
+    moviesCollection = db.collection(collectionName);
     
-    console.log(` Connected to database: ${dbName}, collection: ${collectionName}`);
+    console.log(`✅ Connected to database: ${dbName}, collection: ${collectionName}`);
     
-    return collection;
+    return moviesCollection;
 }
 
 // ============================================================================
@@ -123,7 +130,6 @@ async function connectToDatabase(): Promise<Collection<Movie>> {
 // - Handles errors with try-catch and returns status 500 with error message
 // ============================================================================
 
-// YOUR CODE HERE
 app.get('/api/movies', async (req: Request, res: Response) => {
     try {
         const collection = await connectToDatabase();
@@ -145,10 +151,9 @@ app.get('/api/movies', async (req: Request, res: Response) => {
 // - Handles errors with try-catch and returns status 500
 // ============================================================================
 
-// YOUR CODE HERE
 app.get('/api/movies/:id', async (req: Request, res: Response) => {
     try {
-        const id = req.params.id;
+        const id = req.params.id as string;
         const collection = await connectToDatabase();
         const movie = await collection.findOne({ _id: new ObjectId(id) });
         
@@ -174,7 +179,6 @@ app.get('/api/movies/:id', async (req: Request, res: Response) => {
 // - Handles errors appropriately
 // ============================================================================
 
-// YOUR CODE HERE
 app.post('/api/movies', async (req: Request, res: Response) => {
     try {
         const { title, director, year, rating } = req.body;
@@ -209,10 +213,9 @@ app.post('/api/movies', async (req: Request, res: Response) => {
 // - Handles errors with try-catch
 // ============================================================================
 
-// YOUR CODE HERE
 app.put('/api/movies/:id', async (req: Request, res: Response) => {
     try {
-        const id = req.params.id;
+        const id = req.params.id as string;
         const updateData = req.body;
         
         const collection = await connectToDatabase();
@@ -243,10 +246,9 @@ app.put('/api/movies/:id', async (req: Request, res: Response) => {
 // - Handles errors with try-catch
 // ============================================================================
 
-// YOUR CODE HERE
 app.delete('/api/movies/:id', async (req: Request, res: Response) => {
     try {
-        const id = req.params.id;
+        const id = req.params.id as string;
         
         const collection = await connectToDatabase();
         const result = await collection.deleteOne({ _id: new ObjectId(id) });
@@ -272,19 +274,15 @@ app.delete('/api/movies/:id', async (req: Request, res: Response) => {
 // - Catch any database errors, log them, and exit process
 // ============================================================================
 
-// YOUR CODE HERE
-let moviesCollection: Collection<Movie>;
-
 connectToDatabase()
-    .then((collection) => {
-        moviesCollection = collection;
+    .then(() => {
         app.listen(PORT, () => {
-            console.log(` Server running at http://localhost:${PORT}`);
-            console.log(` API endpoints available at http://localhost:${PORT}/api/movies`);
+            console.log(`🚀 Server running at http://localhost:${PORT}`);
+            console.log(`📋 API endpoints available at http://localhost:${PORT}/api/movies`);
         });
     })
     .catch((error) => {
-        console.error(' Failed to connect to database:', error);
+        console.error('❌ Failed to connect to database:', error);
         process.exit(1);
     });
 
