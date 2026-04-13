@@ -146,7 +146,23 @@ app.get('/api/movies', async (req: Request, res: Response) => {
 // ============================================================================
 
 // YOUR CODE HERE
-
+app.get('/api/movies/:id', async (req: Request, res: Response) => {
+    try {
+        const id = req.params.id;
+        const collection = await connectToDatabase();
+        const movie = await collection.findOne({ _id: new ObjectId(id) });
+        
+        if (!movie) {
+            res.status(404).json({ error: 'Movie not found' });
+            return;
+        }
+        
+        res.status(200).json(movie);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Failed to fetch movie' });
+    }
+});
 
 // ============================================================================
 // TODO #7: POST /api/movies - Create New Movie (1 mark)
