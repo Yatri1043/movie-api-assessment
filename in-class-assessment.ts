@@ -175,7 +175,29 @@ app.get('/api/movies/:id', async (req: Request, res: Response) => {
 // ============================================================================
 
 // YOUR CODE HERE
-
+app.post('/api/movies', async (req: Request, res: Response) => {
+    try {
+        const { title, director, year, rating } = req.body;
+        
+        const newMovie: Movie = {
+            title,
+            director,
+            year,
+            rating
+        };
+        
+        const collection = await connectToDatabase();
+        const result = await collection.insertOne(newMovie);
+        
+        res.status(201).json({ 
+            message: 'Movie created successfully', 
+            insertedId: result.insertedId 
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Failed to create movie' });
+    }
+});
 
 // ============================================================================
 // TODO #8: PUT /api/movies/:id - Update Movie (1 mark)
