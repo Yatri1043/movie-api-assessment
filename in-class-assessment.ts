@@ -273,7 +273,20 @@ app.delete('/api/movies/:id', async (req: Request, res: Response) => {
 // ============================================================================
 
 // YOUR CODE HERE
+let moviesCollection: Collection<Movie>;
 
+connectToDatabase()
+    .then((collection) => {
+        moviesCollection = collection;
+        app.listen(PORT, () => {
+            console.log(` Server running at http://localhost:${PORT}`);
+            console.log(` API endpoints available at http://localhost:${PORT}/api/movies`);
+        });
+    })
+    .catch((error) => {
+        console.error(' Failed to connect to database:', error);
+        process.exit(1);
+    });
 
 // ============================================================================
 // TESTING CHECKLIST (for students):
